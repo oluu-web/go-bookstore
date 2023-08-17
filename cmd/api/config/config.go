@@ -19,7 +19,7 @@ type Config struct {
 
 // LoadEnv loads environment variables from a .env file
 func LoadEnv() error {
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
 		return fmt.Errorf("error loading .env file: %w", err)
 	}
@@ -28,7 +28,7 @@ func LoadEnv() error {
 
 // GetMongoDBConnection returns a MongoDB client connection
 func GetMongoDBConnection() (*mongo.Client, error) {
-	mongoURI := os.Getenv("MONGO_URI")
+	mongoURI := os.Getenv("MONGOURI")
 	clientOptions := options.Client().ApplyURI(mongoURI)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
@@ -43,7 +43,7 @@ func GetConfig() (*Config, error) {
 		return nil, err
 	}
 
-	mongoURI := os.Getenv("MONGO_URI")
+	mongoURI := os.Getenv("MONGOURI")
 
 	config := &Config{
 		MongoURI: mongoURI,
