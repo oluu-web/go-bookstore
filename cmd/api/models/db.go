@@ -62,3 +62,18 @@ func GetAllBooks() ([]Book, error) {
 	}
 	return books, nil
 }
+
+func CreateNewBook(book Book) (string, error) {
+	collection := GetDBCollection("Books")
+
+	result, err := collection.InsertOne(context.Background(), book)
+	if err != nil {
+		return "", err
+	}
+
+	if oid, ok := result.InsertedID.(string); ok {
+		return oid, nil
+	}
+
+	return "", fmt.Errorf("unknown inserted ID type")
+}
