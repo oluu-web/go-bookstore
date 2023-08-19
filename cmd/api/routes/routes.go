@@ -19,8 +19,8 @@ func InitRoutes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/authors/:author", controllers.GetBooksByAuthor)   //✅
 	router.HandlerFunc(http.MethodGet, "/years", controllers.GetYears)                     //✅
 	router.HandlerFunc(http.MethodGet, "/years/:release_date", controllers.GetBooksByYear) //✅
-	router.HandlerFunc(http.MethodPut, "/edit/:id", controllers.UpdateBook)
-	router.HandlerFunc(http.MethodDelete, "/delete/:id", controllers.DeleteBook)
+	router.HandlerFunc(http.MethodPut, "/edit/:id", controllers.UpdateBook)                //✅
+	router.HandlerFunc(http.MethodDelete, "/delete/:id", controllers.DeleteBook)           //✅
 
 	return middleware.EnableCORS(router)
 }
