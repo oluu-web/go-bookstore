@@ -318,3 +318,65 @@ func GetBooksByAuthor(author string) ([]Book, error) {
 	}
 	return books, nil
 }
+
+func UpdateBook(bookID string, updatedBook Book) error {
+	collection := GetDBCollection("Books")
+
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("Invalid object ID format: ", err)
+	}
+
+	filter := bson.M{"_id": objectID}
+
+	update := bson.M{
+		"$set": bson.M{
+			"book_name":    updatedBook.BookName,
+			"author":       updatedBook.Genre,
+			"release_date": updatedBook.ReleaseDate,
+			"genre":        updatedBook.Genre,
+		},
+	}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteBook(bookID string) error {
+	collection := GetDBCollection("Books")
+
+	_, err := GetBookByID(bookID)
+	if err != nil {
+		return err
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("Invalid object ID format")
+	}
+
+	filter := bson.M{"_id": objectID}
+
+	_, err = collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CheckDuplicate(name string) (bool, error) {
+	collection := GetDBCollection("Books")
+
+	filter := bson.M{"book_name": name}
+
+	count, err := collection.CountDocuments(context.Background(), filter)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}

@@ -4,6 +4,7 @@ import (
 	"bookstore/cmd/api/models"
 	"bookstore/cmd/api/utilities"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -18,14 +19,25 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bookID, err := models.CreateNewBook(book)
+	//check for duplicate
+	isDuplicate, err := models.CheckDuplicate(book.BookName)
+	if err != nil {
+		utilities.ErrorJSON(w, err)
+		return
+	}
+	if isDuplicate {
+		utilities.ErrorJSON(w, fmt.Errorf("Duplicate Book"))
+		return
+	}
+
+	_, err = models.CreateNewBook(book)
 	if err != nil {
 		utilities.ErrorJSON(w, err)
 		return
 	}
 
 	utilities.WriteJSON(w, http.StatusOK, book, "book")
-	json.NewEncoder(w).Encode(bookID)
+	// json.NewEncoder(w).Encode(bookID)
 }
 
 func GetBooks(w http.ResponseWriter, r *http.Request) {
@@ -120,9 +132,33 @@ func GetBooksByYear(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	bookID := params.ByName("id")
 
+	var updatedBook models.Book
+	err := json.NewDecoder(r.Body).Decode(&updatedBook)
+	if err != nil {
+		utilities.ErrorJSON(w, err)
+		return
+	}
+
+	err = models.UpdateBook(bookID, updatedBook)
+	if err != nil {
+		utilities.ErrorJSON(w, err)
+	}
+
+	utilities.WriteJSON(w, http.StatusOK, "Book Updated Successfully", "Success")
 }
 
 func DeleteBook(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	bookID := params.ByName("id")
 
+	err := models.DeleteBook(bookID)
+	if err != nil {
+		utilities.ErrorJSON(w, err)
+		return
+	}
+
+	utilities.WriteJSON(w, http.StatusOK, "Book deleted Successfully", "Success")
 }
