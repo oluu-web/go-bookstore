@@ -380,3 +380,64 @@ func CheckDuplicate(name string) (bool, error) {
 
 	return count > 0, nil
 }
+
+func MakeReview(bookID string, review Review) error {
+	collection := GetDBCollection("Books")
+
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("Invalid object ID format: ", err)
+	}
+
+	filter := bson.M{"_id": objectID}
+
+	update := bson.M{
+		"$push": bson.M{
+			"reviews": review,
+		},
+	}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AverageRating(bookID string) (float64, error) {
+	collection := GetDBCollection("Books")
+
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return 0, fmt.Errorf("Invalid object ID format")
+	}
+
+	pipeline := []bson.M{
+		{"$match": bson.M{"_id": objectID}},
+		{"$unwind": "$reviews"},
+		{"$group": bson.M{"_id": "$_id", "averageRating": bson.M{"$avg": "$reviews.rating"}}},
+	}
+
+	cur, err := collection.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		return 0, err
+	}
+
+	defer cur.Close(context.Background())
+
+	var result struct {
+		AverageRating float64 `bson:"averageRating"`
+	}
+
+	if cur.Next(context.Background()) {
+		err := cur.Decode(&result)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	fmt.Println(result.AverageRating)
+	return result.AverageRating, nil
+
+}

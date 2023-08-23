@@ -162,3 +162,42 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	utilities.WriteJSON(w, http.StatusOK, "Book deleted Successfully", "Success")
 }
+
+func Review(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	bookID := params.ByName("id")
+	var newReview models.Review
+	err := json.NewDecoder(r.Body).Decode(&newReview)
+	if err != nil {
+		utilities.ErrorJSON(w, err)
+		return
+	}
+
+	err = models.MakeReview(bookID, newReview)
+	if err != nil {
+		utilities.ErrorJSON(w, err)
+		return
+	}
+
+	utilities.WriteJSON(w, http.StatusOK, "Review Added Successfully", "review")
+
+}
+
+func GetAverage(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	bookID := params.ByName("id")
+
+	averageRating, err := models.AverageRating(bookID)
+	if err != nil {
+		utilities.ErrorJSON(w, err)
+		return
+	}
+
+	response := struct {
+		AverageRating float64 `json:"averageRating"`
+	}{
+		AverageRating: averageRating,
+	}
+
+	utilities.WriteJSON(w, http.StatusOK, response, "data")
+}
